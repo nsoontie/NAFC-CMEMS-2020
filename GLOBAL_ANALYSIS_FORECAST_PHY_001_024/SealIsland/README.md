@@ -1,5 +1,4 @@
-Data sources
-############
+# Data sources
 * global-analysis-forecast-phy-001-024_1610112405187.nc
   * https://resources.marine.copernicus.eu/?option=com_csw&view=details&product_id=GLOBAL_ANALYSIS_FORECAST_PHY_001_024
   * A small geographical area that encompasses the entire Seal Island transect was selected.
