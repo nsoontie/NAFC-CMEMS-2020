@@ -16,7 +16,10 @@ TRANSECTS_DICT = {
     'SealIsland': {'sub_domain': [-56,53,-52,56]},
     'WhiteBay' : {'sub_domain': [-57, 50, -49, 53]},
     'FlemishCap': {'sub_domain': [-53, 46.5, -41.5, 47.5]},
-    'Bonavista': {'sub_domain': [-53, 48.5, -47.5, 50.5]}
+    'Bonavista': {'sub_domain': [-53, 48.5, -47.5, 50.5]},
+    'BonneBay': {'sub_domain': [-60, 49, -58, 50.5]},
+    'HalifaxLine': {'sub_domain': [-64, 42.5, -61, 44.5]},
+    'Louisbourg': {'sub_domain': [-60, 43, -57, 46]}
 }
 START_YEAR=1993
 END_YEAR=2020
@@ -62,6 +65,10 @@ def extract_transect_timeseries(transect,
     years = np.arange(start_year, end_year+1)
     months = SEASONS[season]['months']
     label = SEASONS[season]['label']
+    print(       os.path.join(
+            csv_outputs,
+            transect,
+            '{}.txt'.format(transect.lower())))
     stations = pd.read_table(
         os.path.join(
             csv_outputs,

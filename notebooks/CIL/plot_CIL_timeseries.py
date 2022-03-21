@@ -47,9 +47,9 @@ def main():
     # Settings for this transect
     season = sys.argv[1]
     label=SEASONS[season]['label']
-    anomaly=True
-    transects = ['SealIsland', 'WhiteBay', 'Bonavista', 'FlemishCap']
-    fig, axs = plt.subplots(4, 1, figsize=(8,10), sharex=True)
+    anomaly=False
+    transects = ['BonneBay', 'Louisbourg', 'HalifaxLine']
+    fig, axs = plt.subplots(3, 1, figsize=(8,10), sharex=True)
     for ax, transect in zip(axs, transects):
         plot_transect_timeseries(transect, season, ax, anomaly=anomaly)
         ax.text(0.05, 0.8, transect, transform=ax.transAxes)
@@ -57,15 +57,15 @@ def main():
         if anomaly:
             ylabel='Standardized \nAnomaly'
             ax.set_ylim([-3,3])
-            fname = os.path.join('figures', 'CIL_Area_{}_anomaly.png'.format(label))
+            fname = os.path.join('figures', 'other_CIL_Area_{}_anomaly.png'.format(label))
         else:
             ylabel='CIL Area (km^2)'
-            fname = os.path.join('figures', 'CIL_Area_{}.png'.format(label))
+            fname = os.path.join('figures', 'other_CIL_Area_{}.png'.format(label))
         ax.grid()
     ax=axs[0]
     ax.set_ylabel(ylabel)
     ax.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-    ax.set_title('CIL Area along \n transects on NL Shelf \n {} average'.format(label),
+    ax.set_title('CIL Area along \n transects \n {} average'.format(label),
                  fontweight='bold',
                  fontsize=14)
     ax=axs[-1]
