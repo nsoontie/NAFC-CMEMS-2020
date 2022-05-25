@@ -12,10 +12,12 @@ def depth_integrate(var, mask, e3t):
     return (var*mask*e3t).sum(dim='depth', skipna=True)
 
 
-def interpolate_transect(var, lons, lats, method='linear'):
+def interpolate_transect(var, lons, lats, method='linear', fill_value=None):
     """Interpolate a variable along a transect defined by lons, lats"""
     lons = xr.DataArray(lons, dims='transect')
     lats = xr.DataArray(lats, dims='transect')
+    if fill_value is not None:
+        var = var.fillna(fill_value)
     return var.interp(longitude=lons, latitude=lats, method=method)
 
 
@@ -89,7 +91,6 @@ def calculate_transport(across_vel,
                         transect,
                         mask_transect,
                         e3t_transect,
-                        depth_transect,
                         barotropic=True
                         ):
     """Caclulate transport along a transect.
@@ -98,10 +99,11 @@ def calculate_transport(across_vel,
     transect is an array of complex numbers dx +j*dy where dx and dy represent the
     x displacement and y displacment for each transect segment.
     By default, across_vel should be depth-averaged.
-    For depth-dependent velocities, pass baratopric=False.
+    For depth-dependent velocities, pass bartropic=False.
    """
     n = len(transect)
     transport = 0
+    H = (mask_transect*e3t_transect).sum(dim='depth', skipna=True)
     for i in range(n):
         ref_vector = transect[i]
         across = across_vel.isel(transect=i)
@@ -110,8 +112,7 @@ def calculate_transport(across_vel,
                                                    mask_transect.isel(transect=i), 
                                                    e3t_transect.isel(transect=i))
         else:
-            H = depth_transect.isel(transect=i) 
-            depth_integrated_vel = across*H
+            depth_integrated_vel = across*H.isel(transect=i)
             
         tadd = depth_integrated_vel*np.abs(ref_vector)
         tadd = tadd.where(~np.isnan(tadd), 0)
@@ -122,7 +123,7 @@ def calculate_transport(across_vel,
     return transport
 
 
-def get_transect_transport(u, v, mask, e3t, depth, transect,
+def get_transect_transport(u, v, mask, e3t, transect,
                            barotropic=True,
                            num_points=100):
     lons = np.linspace(transect.lon1.values[0],
@@ -138,16 +139,24 @@ def get_transect_transport(u, v, mask, e3t, depth, transect,
                                          dir_north_perp)
 
     if barotropic:
-        H = depth.where(depth!=0)
+        H = (mask*e3t).sum(dim='depth', skipna=True)
+        H = H.where(H!=0)
         u = depth_integrate(u, mask, e3t)/H
         v = depth_integrate(v, mask, e3t)/H
  
     mask_transect = interpolate_transect(mask, lons, lats, method='nearest')
-    e3t_transect = interpolate_transect(e3t, lons, lats)
-    depth_transect = interpolate_transect(depth, lons, lats)
+    e3t_transect = interpolate_transect(e3t, lons, lats, method='nearest')
 
-    u_transect = interpolate_transect(u, lons, lats)
-    v_transect = interpolate_transect(v, lons, lats)
+
+    u_transect = interpolate_transect(u, lons, lats, fill_value=0)
+    v_transect = interpolate_transect(v, lons, lats, fill_value=0)
+    # masking
+    if barotropic:
+        u_transect = u_transect.where(mask_transect.isel(depth=0))
+        v_transect = v_transect.where(mask_transect.isel(depth=0))
+    else:
+        u_transect = u_transect.where(mask_transect)
+        v_transect = v_transect.where(mask_transect)
 
     along_vel, across_vel = get_rotated_velocities(u_transect,
                                                    v_transect,
@@ -156,7 +165,6 @@ def get_transect_transport(u, v, mask, e3t, depth, transect,
                                     transect_vector,
                                     mask_transect,
                                     e3t_transect,
-                                    depth_transect,
                                     barotropic=barotropic
                                     )
 
